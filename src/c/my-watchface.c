@@ -7,10 +7,31 @@ static Window *s_main_window;
 static TextLayer *s_time_layer; // время
 static TextLayer *s_day_layer; // день недели
 static TextLayer *s_date_layer; // дата
+static TextLayer *s_weather_layer; // погода
 
 // Объявляем шрифты
 static GFont s_dancingscript_m_48;
 static GFont s_dancingscript_m_24;
+
+
+static void inbox_recieved_callback(DictionaryIterator *iterator, void *context) {
+  const int inbox_size = 128;
+  const int outbox_size = 128;
+  app_message_open(inbox_size, outbox_size);
+}
+
+static void inbox_dropped_callback(AppMessageResult reason, void *context) {
+  APP_LOG(APP_LOG_LEVEL_ERROR, "Message dropped!");
+}
+
+static void outbox_sent_callback(DictionaryIterator *iterator, void *context) {
+  APP_LOG(APP_LOG_LEVEL_INFO, "Outbox send success!");
+}
+
+static void outbox_failed_callback(DictionaryIterator *iterator, AppMessageResult reason, void *context) {
+  APP_LOG(APP_LOG_LEVEL_ERROR, "Outbox send failed!");
+}
+
 
 // Функция обновления времени
 static void update_time() {
@@ -70,6 +91,9 @@ static void main_window_load(Window *window) {
   s_date_layer = text_layer_create(
     GRect(0, PBL_IF_ROUND_ELSE(103, 100), bounds.size.w, bounds.size.h) // дата
   );
+  s_weather_layer = text_layer_create(
+    GRect(0, PBL_IF_ROUND_ELSE(125, 120), bounds.size.w, 25) // погода
+  );
   
   // Делаем циферблат
 
@@ -77,11 +101,13 @@ static void main_window_load(Window *window) {
   text_layer_set_background_color(s_time_layer, GColorClear); // время
   text_layer_set_background_color(s_day_layer, GColorClear); // день недели
   text_layer_set_background_color(s_date_layer, GColorClear); // дата
+  text_layer_set_background_color(s_weather_layer, GColorClear); // дата
 
   // Установка цвета текста
   text_layer_set_text_color(s_time_layer, GColorFromRGB(211, 236, 167)); // время
   text_layer_set_text_color(s_day_layer, GColorFromRGB(211, 236, 167)); // день недели
   text_layer_set_text_color(s_date_layer, GColorFromRGB(211, 236, 167)); // дата
+  text_layer_set_text_color(s_weather_layer, GColorFromRGB(211, 236, 167)); // дата
 
   // Установка шрифта
   // Добавление нестандартных шрифтов циферблата
@@ -92,16 +118,19 @@ static void main_window_load(Window *window) {
   text_layer_set_font(s_time_layer, s_dancingscript_m_48); // время
   text_layer_set_font(s_day_layer, s_dancingscript_m_24); // день недели
   text_layer_set_font(s_date_layer, s_dancingscript_m_24); // дата
+  text_layer_set_font(s_weather_layer, s_dancingscript_m_24); // дата
 
   // Установка выравнивания текста
   text_layer_set_text_alignment(s_time_layer, GTextAlignmentCenter); // время
   text_layer_set_text_alignment(s_day_layer, GTextAlignmentCenter); // день недели
   text_layer_set_text_alignment(s_date_layer, GTextAlignmentCenter); // дата
+  text_layer_set_text_alignment(s_weather_layer, GTextAlignmentCenter); // дата
 
   // Добавление текстовых слоёв, как дочерних, к слою главного окна (Порядок слоёв важен)
   layer_add_child(window_layer, text_layer_get_layer(s_time_layer)); // время
   layer_add_child(window_layer, text_layer_get_layer(s_date_layer)); // день недели
   layer_add_child(window_layer, text_layer_get_layer(s_day_layer)); // дата
+  layer_add_child(window_layer, text_layer_get_layer(s_weather_layer)); // дата
 }
 
 // Функция для уничтожения главного окна
@@ -110,6 +139,7 @@ static void main_window_unload(Window *window) {
   text_layer_destroy(s_time_layer); // время
   text_layer_destroy(s_day_layer); // день недели
   text_layer_destroy(s_date_layer); // дата
+  text_layer_destroy(s_weather_layer); // дата
 
   // Уничтожение шрифтов
   fonts_unload_custom_font(s_dancingscript_m_48);
@@ -140,6 +170,12 @@ static void init() {
 
   // Задаём цвет фона
   window_set_background_color(s_main_window, GColorFromRGB(25, 40, 47));
+
+  //
+  app_message_register_inbox_received(inbox_received_callback);
+  app_message_register_inbox_dropped(inbox_dropped_callback);
+  app_message_register_outbox_failed(outbox_failed_callback);
+  app_message_register_outbox_sent(outbox_sent_callback);
 }
 
 // Функция деинициализации
