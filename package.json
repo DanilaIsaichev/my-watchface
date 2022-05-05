@@ -4,6 +4,7 @@
   "version": "1.0.0",
   "keywords": ["pebble-app"],
   "private": true,
+  "capabilities": ["location"],
   "dependencies": {},
   "pebble": {
     "displayName": "my-watchface",
@@ -20,7 +21,8 @@
       "watchface": true
     },
     "messageKeys": [
-      "dummy"
+      "TEMPERATURE",
+      "CONDITIONS"
     ],
     "resources": {
       "media": [

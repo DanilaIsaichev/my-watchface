@@ -14,10 +14,27 @@ static GFont s_dancingscript_m_48;
 static GFont s_dancingscript_m_24;
 
 
-static void inbox_recieved_callback(DictionaryIterator *iterator, void *context) {
+static void inbox_received_callback(DictionaryIterator *iterator, void *context) {
   const int inbox_size = 128;
   const int outbox_size = 128;
   app_message_open(inbox_size, outbox_size);
+  
+  // Буфферы для хранения информации о погоде
+  static char temperature_buffer[8];
+  static char conditions_buffer[32];
+  static char weather_layout_buffer[32];
+
+  // Чтение кортежей данных
+  Tuple *temp_tuple = dict_find(iterator, MESSAGE_KEY_TEMPERATURE);
+  Tuple *conditions_tuple = dict_find(iterator, MESSAGE_KEY_CONDITIONS);
+
+  //
+  if (temp_tuple && conditions_tuple) {
+    snprintf(temperature_buffer, sizeof(temperature_buffer), "%dC", (int)temp_tuple->value->int32);
+    snprintf(conditions_buffer, sizeof(conditions_buffer), "%s", conditions_tuple->value->cstring);
+    snprintf(weather_layout_buffer, sizeof(weather_layout_buffer), "%s, %s", temperature_buffer, conditions_buffer);
+    text_layer_set_text(s_weather_layer, weather_layout_buffer);
+  }
 }
 
 static void inbox_dropped_callback(AppMessageResult reason, void *context) {
@@ -68,11 +85,24 @@ static void update_day() {
 // Функция-обработчик смены времени (минуты)
 static void tick_handler(struct tm *tick_time, TimeUnits units_changed) {
   update_time();
-}
 
-// Функция-обработчик смены времени (дни)
-static void day_handler(struct tm *tick_time, TimeUnits units_changed) {
-  update_day();
+  // Получение данных о погоде каждые 30 минут
+  if(tick_time->tm_hour % 12 == 0) {
+    update_day();
+  }
+
+  // Получение данных о погоде каждые 30 минут
+  if(tick_time->tm_min % 30 == 0) {
+    // Создание словаря
+    DictionaryIterator *iter;
+    app_message_outbox_begin(&iter);
+
+    // Заполнение словаря
+    dict_write_uint8(iter, 0, 0);
+
+    // Отправка сообщения
+    app_message_outbox_send();
+  }
 }
 
 // Функция для загрузки главного окна
@@ -92,7 +122,7 @@ static void main_window_load(Window *window) {
     GRect(0, PBL_IF_ROUND_ELSE(103, 100), bounds.size.w, bounds.size.h) // дата
   );
   s_weather_layer = text_layer_create(
-    GRect(0, PBL_IF_ROUND_ELSE(125, 120), bounds.size.w, 25) // погода
+    GRect(0, PBL_IF_ROUND_ELSE(129, 126), bounds.size.w, bounds.size.h) // погода
   );
   
   // Делаем циферблат
@@ -159,7 +189,6 @@ static void init() {
 
   // Создание обработчика событий "Изменение времени"
   tick_timer_service_subscribe(MINUTE_UNIT, tick_handler); // время
-  tick_timer_service_subscribe(DAY_UNIT, day_handler); // дни
   
   // Отображение окна на часах с animated=true
   window_stack_push(s_main_window, true);
