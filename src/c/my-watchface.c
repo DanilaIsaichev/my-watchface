@@ -1,34 +1,16 @@
-// TODO: Проверить как часто обновляются дата и время (дата - раз в день, время - раз в минуту)
-
-
 #include <pebble.h>
 
 // Объявляем главное окно
 static Window *s_main_window;
 
-// Объявляем слой текста (время)
-static TextLayer *s_time_layer;
+// Объявляем слои текста (время)
+static TextLayer *s_time_layer; // время
+static TextLayer *s_day_layer; // день недели
+static TextLayer *s_date_layer; // дата
 
-// Объявляем слой текста (день - месяц)
-static TextLayer *s_date_layer;
-
-// Объявляем слой текста (день - месяц)
-static TextLayer *s_day_layer;
-
-// Объявляем шрифт
-static GFont s_time_font;
-
-// Объявляем шрифт
-static GFont s_date_font;
-
-static int a = 0;
-
-static int b = 0;
-// Объявляем bitmap слой
-//static BitmapLayer *s_background_layer;
-
-//Объявляем bitmap
-//static GBitmap *s_background_bitmap;
+// Объявляем шрифты
+static GFont s_dancingscript_m_48;
+static GFont s_dancingscript_m_24;
 
 // Функция обновления времени
 static void update_time() {
@@ -36,7 +18,7 @@ static void update_time() {
   time_t temp = time(NULL);
   struct tm *tick_time = localtime(&temp);
 
-  // Запись времени (часы и минуты) в буффер
+  // Запись времени в буффер
   static char s_buffer[8];
   strftime(s_buffer, sizeof(s_buffer), clock_is_24h_style() ? "%H:%M" : "%I:%M", tick_time);
 
@@ -50,26 +32,24 @@ static void update_day() {
   time_t temp = time(NULL);
   struct tm *tick_time = localtime(&temp);
 
-  // Запись дня - месяца в буффер
-  static char s_date_buffer[8];
-  strftime(s_date_buffer, sizeof(s_date_buffer), "%d %b", tick_time);
-
-  // Запись 
+  // Запись в буффер
   static char s_day_buffer[8];
-  strftime(s_day_buffer, sizeof(s_day_buffer), "%a", tick_time);
+  strftime(s_day_buffer, sizeof(s_day_buffer), "%a", tick_time); // день недели
+  static char s_date_buffer[8];
+  strftime(s_date_buffer, sizeof(s_date_buffer), "%d %b", tick_time); // дата
 
-  // Отображение дня - месяца на слое
-  text_layer_set_text(s_date_layer, s_date_buffer);
-
-  // Отображение 
-  text_layer_set_text(s_day_layer, s_day_buffer);
+  // Отображение на слое
+  text_layer_set_text(s_day_layer, s_day_buffer); // день недели
+  text_layer_set_text(s_date_layer, s_date_buffer); // дата
+  
 }
 
-// Функция-обработчик смены времени
+// Функция-обработчик смены времени (минуты)
 static void tick_handler(struct tm *tick_time, TimeUnits units_changed) {
   update_time();
 }
 
+// Функция-обработчик смены времени (дни)
 static void day_handler(struct tm *tick_time, TimeUnits units_changed) {
   update_day();
 }
@@ -80,109 +60,60 @@ static void main_window_load(Window *window) {
   Layer *window_layer = window_get_root_layer(window);
   GRect bounds = layer_get_bounds(window_layer);
 
-  // Создание текстового слоя (TextLayer) со своими границами (время)
+  // Создание текстовых слоёв (TextLayer) со своими границами
   s_time_layer = text_layer_create(
-    GRect(0, PBL_IF_ROUND_ELSE(58, 26), bounds.size.w, bounds.size.h) // 42 - нижняя граница текста
+    GRect(0, PBL_IF_ROUND_ELSE(29, 26), bounds.size.w, bounds.size.h) // время
   );
-
-  // Создание текстового слоя (TextLayer) со своими границами (день - месяц)
-  s_date_layer = text_layer_create(
-    GRect(0, 100, bounds.size.w, bounds.size.h) // 42 - нижняя граница текста
-  );
-
-  // Создание текстового слоя (TextLayer) со своими границами ()
   s_day_layer = text_layer_create(
-    GRect(0, 74, bounds.size.w, bounds.size.h) // 42 - нижняя граница текста
+    GRect(0, PBL_IF_ROUND_ELSE(77, 74), bounds.size.w, bounds.size.h) // день недели
   );
-
-  // Делаем из слоя циферблат
-
-  // Установка цвета фона текста
-  text_layer_set_background_color(s_time_layer, GColorClear);
-
-  // Установка цвета фона текста
-  text_layer_set_background_color(s_date_layer, GColorClear);
+  s_date_layer = text_layer_create(
+    GRect(0, PBL_IF_ROUND_ELSE(103, 100), bounds.size.w, bounds.size.h) // дата
+  );
+  
+  // Делаем циферблат
 
   // Установка цвета фона текста
-  text_layer_set_background_color(s_day_layer, GColorClear);
+  text_layer_set_background_color(s_time_layer, GColorClear); // время
+  text_layer_set_background_color(s_day_layer, GColorClear); // день недели
+  text_layer_set_background_color(s_date_layer, GColorClear); // дата
 
   // Установка цвета текста
-  text_layer_set_text_color(s_time_layer, GColorFromRGB(211, 236, 167));
-  //text_layer_set_text(s_time_layer, "00:00"); // Установка текста
-
-  // Установка цвета текста
-  text_layer_set_text_color(s_date_layer, GColorFromRGB(211, 236, 167));
-
-  // Установка цвета текста
-  text_layer_set_text_color(s_day_layer, GColorFromRGB(211, 236, 167));
+  text_layer_set_text_color(s_time_layer, GColorFromRGB(211, 236, 167)); // время
+  text_layer_set_text_color(s_day_layer, GColorFromRGB(211, 236, 167)); // день недели
+  text_layer_set_text_color(s_date_layer, GColorFromRGB(211, 236, 167)); // дата
 
   // Установка шрифта
-  //text_layer_set_font(s_time_layer, fonts_get_system_font(BITHAM_42_BOLD)); FONT_KEY_ROBOTO_BOLD_SUBSET_49
+  // Добавление нестандартных шрифтов циферблата
+  s_dancingscript_m_48 = fonts_load_custom_font(resource_get_handle(RESOURCE_ID_FONT_DANCINGSCRIPT_MEDIUM_48));
+  s_dancingscript_m_24 = fonts_load_custom_font(resource_get_handle(RESOURCE_ID_FONT_DANCINGSCRIPT_MEDIUM_24));
 
-  // Добавление нестандартного шрифта циферблата
-  s_time_font = fonts_load_custom_font(resource_get_handle(RESOURCE_ID_FONT_DANCINGSCRIPT_MEDIUM_48));
-
-  s_date_font = fonts_load_custom_font(resource_get_handle(RESOURCE_ID_FONT_DANCINGSCRIPT_MEDIUM_24));
-
-  // Применение шрифта к тексту
-  text_layer_set_font(s_time_layer, s_time_font);
-
-  // Применение шрифта к тексту
-  text_layer_set_font(s_date_layer, s_date_font);
-
-  // Применение шрифта к тексту
-  text_layer_set_font(s_day_layer, s_date_font);
+  // Применение шрифтов к тексту
+  text_layer_set_font(s_time_layer, s_dancingscript_m_48); // время
+  text_layer_set_font(s_day_layer, s_dancingscript_m_24); // день недели
+  text_layer_set_font(s_date_layer, s_dancingscript_m_24); // дата
 
   // Установка выравнивания текста
-  text_layer_set_text_alignment(s_time_layer, GTextAlignmentCenter);
+  text_layer_set_text_alignment(s_time_layer, GTextAlignmentCenter); // время
+  text_layer_set_text_alignment(s_day_layer, GTextAlignmentCenter); // день недели
+  text_layer_set_text_alignment(s_date_layer, GTextAlignmentCenter); // дата
 
-  // Установка выравнивания текста
-  text_layer_set_text_alignment(s_date_layer, GTextAlignmentCenter);
-
-  // Установка выравнивания текста
-  text_layer_set_text_alignment(s_day_layer, GTextAlignmentCenter);
-
-  // Создание Bitmap
-  //s_background_bitmap = gbitmap_create_with_resource(RESOURCE_ID_IMAGE_BACKGROUND);
-
-  // Создание слоя для отображения Bitmap
-  //s_background_layer = bitmap_layer_create(bounds);
-
-  // Установка Bitmap для Bitmap слоя
-  //bitmap_layer_set_bitmap(s_background_layer, s_background_bitmap);
-
-  // Добавление Bitmap слоя, как дочернего, к слою главного окна (Порядок слоёв важен)
-  //layer_add_child(window_layer, bitmap_layer_get_layer(s_background_layer));
-
-  // Добавление текстового слоя, как дочернего, к слою главного окна (Порядок слоёв важен)
-  layer_add_child(window_layer, text_layer_get_layer(s_time_layer));
-
-  // Добавление текстового слоя, как дочернего, к слою главного окна (Порядок слоёв важен)
-  layer_add_child(window_layer, text_layer_get_layer(s_date_layer));
-
-  // Добавление текстового слоя, как дочернего, к слою главного окна (Порядок слоёв важен)
-  layer_add_child(window_layer, text_layer_get_layer(s_day_layer));
+  // Добавление текстовых слоёв, как дочерних, к слою главного окна (Порядок слоёв важен)
+  layer_add_child(window_layer, text_layer_get_layer(s_time_layer)); // время
+  layer_add_child(window_layer, text_layer_get_layer(s_date_layer)); // день недели
+  layer_add_child(window_layer, text_layer_get_layer(s_day_layer)); // дата
 }
 
 // Функция для уничтожения главного окна
 static void main_window_unload(Window *window) {
-  // Уничтожение слоя с циферблатом
-  text_layer_destroy(s_time_layer);
+  // Уничтожение слоёв циферблата
+  text_layer_destroy(s_time_layer); // время
+  text_layer_destroy(s_day_layer); // день недели
+  text_layer_destroy(s_date_layer); // дата
 
-  // Уничтожение слоя с циферблатом
-  text_layer_destroy(s_date_layer);
-
-  // Уничтожение слоя с циферблатом
-  text_layer_destroy(s_day_layer);
-
-  // Уничтожение шрифта
-  fonts_unload_custom_font(s_time_font);
-
-  // Уничтожение Bitmap
-  //gbitmap_destroy(s_background_bitmap);
-
-  // Уничтожение Bitmap слоя
-  //bitmap_layer_destroy(s_background_layer);
+  // Уничтожение шрифтов
+  fonts_unload_custom_font(s_dancingscript_m_48);
+  fonts_unload_custom_font(s_dancingscript_m_24);
 }
 
 // Функция инициализации
@@ -196,21 +127,18 @@ static void init() {
     .unload = main_window_unload
   });
 
-  // Создание обработчика события "Изменение времени"
-  tick_timer_service_subscribe(MINUTE_UNIT, tick_handler);
-
-  tick_timer_service_subscribe(DAY_UNIT, day_handler);
+  // Создание обработчика событий "Изменение времени"
+  tick_timer_service_subscribe(MINUTE_UNIT, tick_handler); // время
+  tick_timer_service_subscribe(DAY_UNIT, day_handler); // дни
   
   // Отображение окна на часах с animated=true
   window_stack_push(s_main_window, true);
 
-  // Отображение правильного времени
-  update_time();
+  // Обновление
+  update_time(); // времени
+  update_day(); // дней
 
-  //
-  update_day();
-
-  // Задаём чёрный фон ???
+  // Задаём цвет фона
   window_set_background_color(s_main_window, GColorFromRGB(25, 40, 47));
 }
 

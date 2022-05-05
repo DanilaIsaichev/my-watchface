@@ -27,14 +27,12 @@
         {
           "type": "font",
           "name": "FONT_DANCINGSCRIPT_MEDIUM_24",
-          "file": "fonts/DancingScript-Medium.ttf",
-          "compatibility":"2.7"
+          "file": "fonts/DancingScript-Medium.ttf"
         },
         {
           "type": "font",
           "name": "FONT_DANCINGSCRIPT_MEDIUM_48",
-          "file": "fonts/DancingScript-Medium.ttf",
-          "compatibility":"2.7"
+          "file": "fonts/DancingScript-Medium.ttf"
         }
       ]
     }
