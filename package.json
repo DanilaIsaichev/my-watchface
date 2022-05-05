@@ -1,0 +1,42 @@
+{
+  "name": "my-watchface",
+  "author": "Daniel Esprit",
+  "version": "1.0.0",
+  "keywords": ["pebble-app"],
+  "private": true,
+  "dependencies": {},
+  "pebble": {
+    "displayName": "my-watchface",
+    "uuid": "90535b93-d120-4848-8d94-885b02fdb7d0",
+    "sdkVersion": "3",
+    "enableMultiJS": true,
+    "targetPlatforms": [
+      "aplite",
+      "basalt",
+      "chalk",
+      "diorit e"
+    ],
+    "watchapp": {
+      "watchface": true
+    },
+    "messageKeys": [
+      "dummy"
+    ],
+    "resources": {
+      "media": [
+        {
+          "type": "font",
+          "name": "FONT_DANCINGSCRIPT_MEDIUM_24",
+          "file": "fonts/DancingScript-Medium.ttf",
+          "compatibility":"2.7"
+        },
+        {
+          "type": "font",
+          "name": "FONT_DANCINGSCRIPT_MEDIUM_48",
+          "file": "fonts/DancingScript-Medium.ttf",
+          "compatibility":"2.7"
+        }
+      ]
+    }
+  }
+}
